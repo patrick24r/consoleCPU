@@ -1,0 +1,20 @@
+[package]
+name = "console_cpu"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+opt-level = 'z' # Max optimizations
+lto = true      # Link-time-optimizations
+
+[dependencies]
+panic-itm = "0.4.2"
+cortex-m-rt = "0.7.2"
+cortex-m = "0.7.6"
+
+
+[dependencies.stm32h7xx-hal]
+features = ["stm32h743"]
+version = "0.13.1"
