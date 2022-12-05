@@ -3,22 +3,28 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-use stm32h7xx_hal::{pac, prelude::*};
+use stm32h7xx_hal::{prelude::*, stm32};
 
 #[allow(unused_imports)]
 use panic_itm;
 
 #[entry]
 fn main() -> ! {
+    let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::Peripherals::take().unwrap();
-    let dp = pac::Peripherals::take().unwrap();
 
     // Constrain power
     let power = dp.PWR.constrain();
     let power_config = power.freeze();
-
     let rcc = dp.RCC.constrain();
-    let ccdr = rcc.sys_ck(100.MHz()).freeze(power_config, &dp.SYSCFG);
+
+    let ccdr = rcc
+        .use_hse(8.MHz())
+        .sys_ck(120.MHz())
+        .sysclk(120.MHz())
+        .pclk1(24.MHz())
+        .pclk2(24.MHz())
+        .freeze(power_config, &dp.SYSCFG);
 
     let gpiob = dp.GPIOB.split(ccdr.peripheral.GPIOB);
     let gpioe = dp.GPIOE.split(ccdr.peripheral.GPIOE);
@@ -30,17 +36,11 @@ fn main() -> ! {
     let mut delay = cp.SYST.delay(ccdr.clocks);
 
     loop {
-        led_1.set_high();
+        led_1.toggle();
         delay.delay_ms(300_u16);
-        led_2.set_high();
+        led_2.toggle();
         delay.delay_ms(300_u16);
-        led_3.set_high();
-        delay.delay_ms(300_u16);
-        led_1.set_low();
-        delay.delay_ms(300_u16);
-        led_2.set_low();
-        delay.delay_ms(300_u16);
-        led_3.set_low();
+        led_3.toggle();
         delay.delay_ms(300_u16);
     }
 }

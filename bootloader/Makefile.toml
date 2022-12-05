@@ -1,0 +1,13 @@
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build", "${@}"]
+dependencies = ["clean"]
+
+[tasks.flash]
+dependencies = ["build"]
+command = "cargo"
+args = ["flash", "--chip", "STM32H743ZITx", "${@}"]

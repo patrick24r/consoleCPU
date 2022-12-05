@@ -1,5 +1,5 @@
 [package]
-name = "console_cpu"
+name = "cpu_bootloader"
 version = "0.1.0"
 edition = "2021"
 

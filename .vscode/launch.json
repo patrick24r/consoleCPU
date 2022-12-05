@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Bootloader Debug",
+            "cwd": "${workspaceFolder}/bootloader/",
+            "executable": "${workspaceFolder}/bootloader/target/thumbv7em-none-eabihf/debug/cpu_bootloader",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "cargo flash bootloader",
+            "servertype": "openocd",
+            "svdFile": "${workspaceFolder}/common/device/NUCLEO-H743ZI2/STM32H743.svd",
+            "configFiles": ["${workspaceFolder}/common/device/NUCLEO-H743ZI2/openocd_config.cfg"],
+            "preLaunchCommands": [
+                "monitor init",
+                "monitor reset init"
+            ],
+            "postLaunchCommands": ["continue"] // Don't stop before at the first line
+        }
+    ]
+}

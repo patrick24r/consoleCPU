@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "bootloader"
+		},
+		{
+			"path": "level_os"
+		}
+	],
+	"settings": {}
+}

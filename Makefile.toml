@@ -1,0 +1,5 @@
+[tasks.bootloader]
+script = [
+    "cd bootloader",
+    "cargo make flash"
+]
