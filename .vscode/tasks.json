@@ -7,7 +7,7 @@
             "label": "cargo flash bootloader",
             "type": "shell",
             "command": "cargo",
-            "args": ["make", "flash"],
+            "args": ["make", "bootloader"],
             "problemMatcher": [
                 "$rustc"
             ],

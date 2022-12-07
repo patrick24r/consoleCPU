@@ -5,21 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Bootloader Debug",
+            "name": "Bootloader",
             "cwd": "${workspaceFolder}/bootloader/",
-            "executable": "${workspaceFolder}/bootloader/target/thumbv7em-none-eabihf/debug/cpu_bootloader",
+            "executable": "./target/thumbv7em-none-eabihf/debug/cpu_bootloader",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
             "preLaunchTask": "cargo flash bootloader",
-            "servertype": "openocd",
-            "svdFile": "${workspaceFolder}/common/device/NUCLEO-H743ZI2/STM32H743.svd",
-            "configFiles": ["${workspaceFolder}/common/device/NUCLEO-H743ZI2/openocd_config.cfg"],
-            "preLaunchCommands": [
-                "monitor init",
-                "monitor reset init"
-            ],
-            "postLaunchCommands": ["continue"] // Don't stop before at the first line
+            "servertype": "stlink",
+            "interface": "swd",
+            "svdFile": "$../common/device/NUCLEO-H743ZI2/STM32H743.svd",
+            "stlinkPath": "C:\\Program Files (x86)\\STMicroelectronics\\STM32CubeIDE_1.7.0\\STM32CubeIDE\\plugins\\com.st.stm32cube.ide.mcu.externaltools.stlink-gdb-server.win32_2.0.0.202105311346\\tools\\bin\\ST-LINK_gdbserver.exe",
+            "showDevDebugOutput": "none"
         }
     ]
 }

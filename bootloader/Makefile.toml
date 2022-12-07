@@ -3,9 +3,9 @@ command = "cargo"
 args = ["clean"]
 
 [tasks.build]
+dependencies = ["clean"]
 command = "cargo"
 args = ["build", "${@}"]
-dependencies = ["clean"]
 
 [tasks.flash]
 dependencies = ["build"]

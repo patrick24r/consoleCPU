@@ -1,5 +1,9 @@
 [build]
 target = "thumbv7em-none-eabihf"
 rustflags = [
-    "-C", "link-arg=-Tlink.x", "-g"
+    # Standard linker, but is problematic for us
+    # "-C", "link-arg=-Tlink.x", "-g"
+    "-C", "link-arg=--nmagic",
+    "-C", "linker=arm-none-eabi-ld",
+    
 ]
