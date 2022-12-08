@@ -4,16 +4,19 @@
 
 use panic_rtt_target as _;
 use rtic::app;
+use rtt_target::{rprintln, rtt_init_print};
 use stm32h7xx_hal::gpio::{gpiob::PB0, gpiob::PB14, gpioe::PE1, Output, PushPull};
 use stm32h7xx_hal::prelude::*;
 use systick_monotonic::{fugit::Duration, Systick};
 
-#[app(device = stm32h7xx_hal::pac, peripherals = true, dispatchers = [SPI1])]
+#[app(device = stm32h7xx_hal::pac, peripherals = true, dispatchers = [SDMMC])]
 mod app {
     use super::*;
 
     #[shared]
-    struct Shared {}
+    struct Shared {
+
+    }
 
     #[local]
     struct Local {
@@ -32,10 +35,15 @@ mod app {
         let rcc = cx.device.RCC.constrain();
 
         let mono = Systick::new(cx.core.SYST, 120_000_000);
+
+        rtt_init_print!();
+        rprintln!("init");
+
         let _clocks = rcc
             .use_hse(8.MHz())
-            .sysclk(120.MHz())
-            .pclk1(36.MHz())
+            .sys_ck(120.MHz())
+            .pclk1(120.MHz())
+            .hclk(120.MHz())
             .freeze(power_config, &cx.device.SYSCFG);
 
         // Setup LEDs
