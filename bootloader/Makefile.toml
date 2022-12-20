@@ -3,7 +3,7 @@ command = "cargo"
 args = ["clean"]
 
 [tasks.build]
-dependencies = ["clean"]
+# dependencies = ["clean"]
 command = "cargo"
 args = ["build", "${@}"]
 

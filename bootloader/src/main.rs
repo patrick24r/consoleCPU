@@ -5,24 +5,24 @@
 use panic_rtt_target as _;
 use rtic::app;
 use rtt_target::{rprintln, rtt_init_print};
-use stm32h7xx_hal::gpio::{gpiob::PB0, gpiob::PB14, gpioe::PE1, Output, PushPull};
-use stm32h7xx_hal::prelude::*;
 use systick_monotonic::{fugit::Duration, Systick};
+use sparkbox::{*};
+use sparkbox_device::nucleo_h743zi2::*;
 
-#[app(device = stm32h7xx_hal::pac, peripherals = true, dispatchers = [SDMMC])]
+#[app(device = stm32h7xx_hal::pac, peripherals = true, dispatchers = [TIM2])]
 mod app {
+    use sparkbox::leds::Driver;
+
     use super::*;
 
     #[shared]
     struct Shared {
-
+        led_driver: NucleoH743LedsDriver,
     }
 
     #[local]
     struct Local {
-        led_1: PB0<Output<PushPull>>,
-        led_2: PE1<Output<PushPull>>,
-        led_3: PB14<Output<PushPull>>,
+        led_num: usize,
     }
 
     #[monotonic(binds = SysTick, default = true)]
@@ -30,67 +30,43 @@ mod app {
 
     #[init]
     fn init(cx: init::Context) -> (Shared, Local, init::Monotonics) {
-        // Setup clocks
-        let power_config = cx.device.PWR.constrain().freeze();
-        let rcc = cx.device.RCC.constrain();
 
-        let mono = Systick::new(cx.core.SYST, 120_000_000);
+        // Initialize device
+        let led_driver = NucleoH743LedsDriver::new(cx.device);
 
+        // Initialize logger
         rtt_init_print!();
         rprintln!("init");
 
-        let _clocks = rcc
-            .use_hse(8.MHz())
-            .sys_ck(120.MHz())
-            .pclk1(120.MHz())
-            .hclk(120.MHz())
-            .freeze(power_config, &cx.device.SYSCFG);
-
-        // Setup LEDs
-        let gpiob = cx.device.GPIOB.split(_clocks.peripheral.GPIOB);
-        let gpioe = cx.device.GPIOE.split(_clocks.peripheral.GPIOE);
-
-        let led_1 = gpiob.pb0.into_push_pull_output();
-        let led_2 = gpioe.pe1.into_push_pull_output();
-        let led_3 = gpiob.pb14.into_push_pull_output();
-
-        // Schedule the blinking tasks
-        blink_1::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-        blink_2::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-        blink_3::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-
+        let mono = Systick::new(cx.core.SYST, 240_000_000);
+        // Schedule the blinking task
+        blink::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
         (
-            Shared {},
+            Shared {
+                led_driver,
+            },
             Local {
-                led_1,
-                led_2,
-                led_3,
+                led_num: 0,
             },
             init::Monotonics(mono),
         )
     }
 
-    #[task(local = [led_1])]
-    fn blink_1(cx: blink_1::Context) {
-        cx.local.led_1.toggle();
+    #[task(local = [led_num], shared = [led_driver])]
+    fn blink(mut cx: blink::Context) {
+        let led_num = cx.local.led_num;
+        cx.shared.led_driver.lock(|led_driver| 
+            { 
+                let _ = led_driver.toggle(*led_num);
+                *led_num += 1;
+                *led_num %= led_driver.count();
+            }
+        );
+
+        
+
 
         // Blink again later
-        blink_1::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-    }
-
-    #[task(local = [led_2])]
-    fn blink_2(cx: blink_2::Context) {
-        cx.local.led_2.toggle();
-
-        // Blink again later
-        blink_2::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-    }
-
-    #[task(local = [led_3])]
-    fn blink_3(cx: blink_3::Context) {
-        cx.local.led_3.toggle();
-
-        // Blink again later
-        blink_3::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
+        blink::spawn_after(Duration::<u64, 1, 1000>::from_ticks(250)).unwrap();
     }
 }
