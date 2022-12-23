@@ -1,72 +1,64 @@
-#![deny(unsafe_code)]
 #![no_main]
 #![no_std]
+#![feature(lang_items)]
+#![feature(alloc_error_handler)]
 
-use panic_rtt_target as _;
-use rtic::app;
-use rtt_target::{rprintln, rtt_init_print};
-use systick_monotonic::{fugit::Duration, Systick};
-use sparkbox::{*};
-use sparkbox_device::nucleo_h743zi2::*;
+use cortex_m::asm;
+use cortex_m_rt::exception;
+use cortex_m_rt::{entry, ExceptionFrame};
+use freertos_rust::*;
+use core::alloc::Layout;
 
-#[app(device = stm32h7xx_hal::pac, peripherals = true, dispatchers = [TIM2])]
-mod app {
-    use sparkbox::leds::Driver;
-
-    use super::*;
-
-    #[shared]
-    struct Shared {
-        led_driver: NucleoH743LedsDriver,
-    }
-
-    #[local]
-    struct Local {
-        led_num: usize,
-    }
-
-    #[monotonic(binds = SysTick, default = true)]
-    type MonoTimer = Systick<1000>;
-
-    #[init]
-    fn init(cx: init::Context) -> (Shared, Local, init::Monotonics) {
-
-        // Initialize device
-        let led_driver = NucleoH743LedsDriver::new(cx.device);
-
-        // Initialize logger
-        rtt_init_print!();
-        rprintln!("init");
-
-        let mono = Systick::new(cx.core.SYST, 240_000_000);
-        // Schedule the blinking task
-        blink::spawn_after(Duration::<u64, 1, 1000>::from_ticks(1000)).unwrap();
-        (
-            Shared {
-                led_driver,
-            },
-            Local {
-                led_num: 0,
-            },
-            init::Monotonics(mono),
-        )
-    }
-
-    #[task(local = [led_num], shared = [led_driver])]
-    fn blink(mut cx: blink::Context) {
-        let led_num = cx.local.led_num;
-        cx.shared.led_driver.lock(|led_driver| 
-            { 
-                let _ = led_driver.toggle(*led_num);
-                *led_num += 1;
-                *led_num %= led_driver.count();
-            }
-        );
-
-        
+use cortex_m;
+use sparkbox_device::nucleo_h743zi2 as device;
+use sparkbox::device::Driver;
 
 
-        // Blink again later
-        blink::spawn_after(Duration::<u64, 1, 1000>::from_ticks(250)).unwrap();
-    }
+extern crate panic_halt; // panic handler
+
+#[global_allocator]
+static GLOBAL: FreeRtosAllocator = FreeRtosAllocator;
+
+#[entry]
+fn main() -> ! {
+    // Initialize device
+    _ = device::NucleoH743ZI2Driver::init();
+
+    Task::new().name("blinky").stack_size(128).priority(TaskPriority(2)).start(|| {
+        let mut i = 0;
+        loop {
+            CurrentTask::delay(Duration::ms(250));
+            _ = device::NucleoH743ZI2Driver::leds_toggle(i);
+            i = (i + 1) % 3;
+        }
+    }).unwrap();
+
+    FreeRtosUtils::start_scheduler();
+}
+
+
+#[exception]
+unsafe fn DefaultHandler(_irqn: i16) {
+// custom default handler
+// irqn is negative for Cortex-M exceptions
+// irqn is positive for device specific (line IRQ)
+// set_led(true);(true);
+// panic!("Exception: {}", irqn);
+}
+
+#[exception]
+unsafe fn HardFault(_ef: &ExceptionFrame) -> ! {
+    loop {}
+}
+
+// define what happens in an Out Of Memory (OOM) condition
+#[alloc_error_handler]
+fn alloc_error(_layout: Layout) -> ! {
+    asm::bkpt();
+    loop {}
+}
+
+#[no_mangle]
+fn vApplicationStackOverflowHook(_px_task: FreeRtosTaskHandle, _pc_task_name: FreeRtosCharPtr) {
+    asm::bkpt();
 }

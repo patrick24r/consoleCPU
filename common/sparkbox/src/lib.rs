@@ -1,15 +1,15 @@
 #![no_std]
-pub mod leds;
-
-
-pub struct Sparkbox<'a, LedDrv> {
-    led_driver: &'a mut LedDrv,
-
-}
-
-
-impl<'a, LedDrv> Sparkbox<'a, LedDrv> where 
-LedDrv: leds::Driver,
-{
+pub mod device;
+/* 
+pub struct Sparkbox<Device> {
     
 }
+
+impl<Device> Sparkbox<Device> where
+    Device: device::Driver
+{
+    fn init(&mut self) {
+        Device::leds_toggle(0);
+    }
+}
+*/

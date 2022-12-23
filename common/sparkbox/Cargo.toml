@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 cortex-m-rtic = "1.1.3"
 heapless = "0.7.16"
+embedded-sdmmc = "0.3.0"
 # fatfs = { version = "0.3", features = ["core_io"], default-features = false }
